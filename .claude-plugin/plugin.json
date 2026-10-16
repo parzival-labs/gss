@@ -1,0 +1,9 @@
+{
+  "name": "gss",
+  "version": "0.1.0",
+  "description": "GSS Factory: an agentic software factory for Claude Code. Drives a unit of work through intent, spec, plan, build and ship with a human gate after each artifact.",
+  "author": { "name": "Parzival Labs" },
+  "homepage": "https://github.com/parzival-labs/gss",
+  "repository": "https://github.com/parzival-labs/gss",
+  "keywords": ["sdlc", "factory", "workflow", "spec", "plan"]
+}
