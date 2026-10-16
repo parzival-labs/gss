@@ -1,0 +1,97 @@
+# Validates the gss plugin on every change to it, and runs the eval suite
+# when a Claude token is configured. Evals are real model calls, so they run
+# one pass per case with no baseline arm to keep cost down.
+#
+# Auth for evals: the CLAUDE_CODE_OAUTH_TOKEN repository secret, the same one
+# the Claude review workflow uses. Without it, validation still runs and the
+# eval job skips with a notice.
+name: Plugin CI
+
+on:
+  pull_request:
+    paths:
+      - ".claude-plugin/**"
+      - "skills/**"
+      - "agents/**"
+      - "hooks/**"
+      - "evals/**"
+      - ".github/workflows/plugin-ci.yml"
+  push:
+    branches: [main]
+    paths:
+      - ".claude-plugin/**"
+      - "skills/**"
+      - "agents/**"
+      - "hooks/**"
+      - "evals/**"
+      - ".github/workflows/plugin-ci.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: plugin-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install Claude Code
+        run: npm install -g @anthropic-ai/claude-code
+      - name: Validate marketplace manifest
+        run: claude plugin validate --strict .
+      - name: Validate plugin manifest
+        run: claude plugin validate --strict .claude-plugin/plugin.json
+      - name: Validate skills
+        run: claude plugin validate --strict skills
+      - name: Validate agents
+        if: hashFiles('agents/*.md') != ''
+        run: claude plugin validate --strict agents
+      - name: Check eval fixture scripts parse
+        run: for f in evals/*/fixture.sh; do bash -n "$f"; done
+
+  eval:
+    needs: validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      HAS_CLAUDE_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN != '' }}
+    steps:
+      - name: Skip when no Claude token is configured
+        if: env.HAS_CLAUDE_TOKEN != 'true'
+        run: echo "::notice::CLAUDE_CODE_OAUTH_TOKEN is not set; skipping plugin evals."
+      - uses: actions/checkout@v6
+        if: env.HAS_CLAUDE_TOKEN == 'true'
+      - uses: actions/setup-node@v4
+        if: env.HAS_CLAUDE_TOKEN == 'true'
+        with:
+          node-version: "22"
+      - name: Install Claude Code
+        if: env.HAS_CLAUDE_TOKEN == 'true'
+        run: npm install -g @anthropic-ai/claude-code
+      - name: Run evals
+        if: env.HAS_CLAUDE_TOKEN == 'true'
+        env:
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+        run: >
+          claude plugin eval .
+          --scaffold --trust-plugin
+          --runs 1 --ablation none
+          --threshold 0.75
+          --max-cost-usd 8
+          --no-publish
+          --json evals/results/ci.json
+      - name: Upload eval results
+        if: always() && env.HAS_CLAUDE_TOKEN == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: eval-results
+          path: evals/results/
+          if-no-files-found: ignore

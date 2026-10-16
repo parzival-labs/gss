@@ -18,7 +18,7 @@ Read the `factory-conventions` skill. Input is an accepted `factory/<slug>/spec.
    - What could this break?
    - Which step is the riskiest?
    - Which alternative did we reject, and would you have chosen differently?
-6. Fill the Checks section with the exact commands from the project's `CLAUDE.md`. If `CLAUDE.md` has none, ask for them now. The build stage will not run without them.
+6. Fill the Checks section with the exact commands from `factory/config.json` if it exists, else from the project's `CLAUDE.md`. If neither names any, ask for them now and offer to create `factory/config.json` from the template so every later work item reuses them. The build stage will not run without checks.
 7. Exit plan mode if you entered it. Write `plan.md` with `status: draft`, append `plan: drafted` to `log.md`, commit as `Draft plan for <slug>`.
 8. Stop with the gate message.
 
