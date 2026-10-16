@@ -27,14 +27,19 @@ Read the frontmatter of each artifact that exists and `log.md`. Apply the first 
 | `spec.md` accepted, no `plan.md` | run the plan stage |
 | `plan.md` is `draft` | stop: waiting for acceptance of plan |
 | `plan.md` accepted, no `build:` line saying checks passed | run the build stage |
-| build passed, no `ship:` line | run the ship stage |
+| newest `build:` line says failed | run the build stage |
+| newest `build:` line passed and is newer than any `review:` line | run the review stage |
+| newest `review:` line has more than `0 important` | run the build stage in fix mode |
+| newest `review:` line says `0 important`, no `ship:` line | run the ship stage |
 | `ship:` line present | report the PR and stop |
+
+"Newer" means later in `log.md`.
 
 "Stop: waiting" means tell the user which file to review and how to accept it, per the gate rule. If their message already accepts it in plain words, apply the acceptance per the conventions and continue to the next row.
 
 ## 3. Run exactly one stage
 
-Follow the matching stage skill: `intent`, `spec`, `plan`, `build` or `ship`. Do not run two stages in one invocation, even if the user accepted in chat. One stage, one gate, one stop. The user runs `/gss:factory <slug>` again to continue.
+Follow the matching stage skill: `intent`, `spec`, `plan`, `build`, `review` or `ship`. Do not run two stages in one invocation, even if the user accepted in chat. One stage, one gate, one stop. The user runs `/gss:factory <slug>` again to continue.
 
 ## 4. Before stopping
 

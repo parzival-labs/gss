@@ -16,7 +16,7 @@ Read the `factory-conventions` skill.
    | Work item | Stage | Waiting on | Last activity |
    |---|---|---|---|
 
-   "Waiting on" is `acceptance of <artifact>`, `build`, `ship`, `PR #n review`, or `done`.
+   "Waiting on" is `acceptance of <artifact>`, `build`, `fixes for <n> Important findings`, `review`, `ship`, `PR #n review`, or `done`.
 4. Rewrite `factory/README.md` with the same table under a one-line heading, so the index is browsable on GitHub. Do not commit; the next stage commit will carry it.
 
 No model judgement is needed for this skill. If anything is ambiguous, say so in the table rather than guessing.

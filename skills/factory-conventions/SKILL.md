@@ -17,8 +17,12 @@ factory/
     intent.md          what and why
     spec.md            requirements and constraints
     plan.md            files, order of work, tests, risks
+    review.md          reviewer findings, ranked, with disposition
     log.md             one line per stage transition
+  config.json          optional: {"checks": [...]} commands that must pass
 ```
+
+`factory/config.json` is shared by all work items. Its `checks` array is the source of truth for what "checks pass" means. When it is absent, the plan's Checks section is used.
 
 The slug is lower-case, hyphenated, at most five words, derived from the idea. `add-rate-limiting`, not `add_rate_limiting_to_the_public_api`.
 
@@ -30,7 +34,10 @@ The slug is lower-case, hyphenated, at most five words, derived from the idea. `
 | spec | `spec.md` | `spec.md` has `status: accepted` |
 | plan | `plan.md` | `plan.md` has `status: accepted` |
 | build | commits on branch `factory/<slug>` and a `build:` line in `log.md` | the `build:` line says checks passed |
+| review | `review.md` from the reviewer subagent and a `review:` line | the `review:` line says `0 important` |
 | ship | a draft pull request and a `ship:` line in `log.md` | never; the PR merge is the final gate |
+
+If a review has Important findings open, the next stage is build again, in fix mode, followed by a fresh review.
 
 ## Frontmatter
 
@@ -66,6 +73,9 @@ Append one line per transition, newest last:
 2026-10-16 intent: drafted
 2026-10-16 intent: accepted by Simon
 2026-10-17 build: checks passed (3 passed, 0 failed) at a1b2c3d
+2026-10-17 review: 1 important, 2 nits at a1b2c3d
+2026-10-17 build: checks passed (4 passed, 0 failed) at e4f5a6b
+2026-10-17 review: 0 important, 2 nits at e4f5a6b
 2026-10-17 ship: draft PR #12
 ```
 
@@ -75,4 +85,4 @@ Commit artifacts to the work item's branch `factory/<slug>`, created from the de
 
 ## Templates
 
-Templates live next to this file under `templates/`. Copy the whole template, keep every heading even if the answer is "none", and fill in the frontmatter.
+Templates live next to this file under `templates/`, including `config.json` for projects that do not have one yet. Copy the whole template, keep every heading even if the answer is "none", and fill in the frontmatter.
