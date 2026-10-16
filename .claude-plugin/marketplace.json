@@ -1,0 +1,12 @@
+{
+  "name": "gss",
+  "owner": { "name": "Parzival Labs" },
+  "description": "Plugins from Parzival Labs. The gss plugin is the GSS Factory.",
+  "plugins": [
+    {
+      "name": "gss",
+      "source": ".",
+      "description": "GSS Factory: intent, spec, plan, build and ship a unit of work with a human gate after each artifact."
+    }
+  ]
+}
