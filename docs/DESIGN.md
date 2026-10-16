@@ -81,7 +81,7 @@ All commands are skills in `skills/<name>/SKILL.md`, which Claude Code exposes a
 ```
 factory/
   README.md              index of work items, maintained by /gss:status
-  config.yml             optional: check commands, protected paths, risk tiers
+  config.json            optional: check commands, protected paths, risk tiers
   <slug>/
     intent.md            problem, proposed outcome, affected users and systems, constraints, open questions
     spec.md              requirements, constraints applied, concerns flagged, acceptance criteria
@@ -123,7 +123,7 @@ Hooks are the deterministic layer. They arrive in Iteration 2, once the skills h
 |---|---|---|
 | `guard-plan-stage` | PreToolUse on Write/Edit | While a work item is in `stage: plan`, block edits outside `factory/<slug>/`. Backstop for "plan mode as default" |
 | `guard-tests-during-fix` | PreToolUse on Write/Edit | During a fix task, block edits to test files. Backstop for "write the failing test first, then fix without touching it" |
-| `guard-protected-paths` | PreToolUse on Write/Edit | Block edits to paths listed in `factory/config.yml` (generated code, migrations, infra) with a message naming the approval route |
+| `guard-protected-paths` | PreToolUse on Write/Edit | Block edits to paths listed in `factory/config.json` (generated code, migrations, infra) with a message naming the approval route |
 | `format-on-edit` | PostToolUse on Write/Edit | Run the project formatter on the changed file only |
 | `done-means-checked` | Stop | Refuse to end a build stage until the check command has run in this session and passed |
 
@@ -147,7 +147,7 @@ What happens on `/gss:factory "add rate limiting to the public API"`:
 3. **Gate.** The human edits, sets `status: accepted`, commits.
 4. **Spec.** On re-run, the orchestrator sees an accepted intent and no spec. The `researcher` agent maps the relevant code. The spec is written against the project's policy skills, with concerns flagged at the top. Stop at the gate.
 5. **Plan.** On re-run, enter plan mode, read the spec and the codebase, write `plan.md`. The skill asks the engineer the playbook's three questions: what could break, which step is riskiest, what was rejected. Stop at the gate.
-6. **Build.** On re-run, create branch `factory/add-rate-limiting`, implement step by step. After each step run the check command from `factory/config.yml` or the project's `CLAUDE.md`. If the plan changes, edit `plan.md` in the same commit. Run `simplifier`, then `verifier`. Paste verifier output into `log.md`.
+6. **Build.** On re-run, create branch `factory/add-rate-limiting`, implement step by step. After each step run the check command from `factory/config.json` or the project's `CLAUDE.md`. If the plan changes, edit `plan.md` in the same commit. Run `simplifier`, then `verifier`. Paste verifier output into `log.md`.
 7. **Review.** `reviewer` agent, fresh context, produces `review.md`. Important findings are fixed in the same session and re-verified. Nits are listed with a disposition.
 8. **Ship.** Push, open a draft PR. Body: links to the four artifacts, verifier output, review summary. The human reviews intent and risk, not every line, and merges. The merge is the final gate.
 9. **Close the loop.** Anything learned twice goes into the host project's `CLAUDE.md`. Any escaped defect becomes a new eval case and, if large, a new `intent.md`.
@@ -174,7 +174,7 @@ Done when: a contributor installs the plugin from GitHub and takes a small chang
 ### Iteration 1: feedback loop and separation of duties
 
 - `verifier` and `reviewer` subagents. `/gss:review` command.
-- `factory/config.yml` with a `checks` list. Build stage refuses to call itself done without green checks.
+- `factory/config.json` with a `checks` list. Build stage refuses to call itself done without green checks.
 - Eval suite v0: five cases under `evals/` covering intent questioning, spec concern flagging, plan completeness, build honesty about failing checks, and review ranking. Run with `claude plugin eval`.
 - GitHub Actions workflow: `claude plugin validate` and `claude plugin eval` on changes to `skills/**`, `agents/**`, `hooks/**`.
 
@@ -185,7 +185,7 @@ Done when: a review finding has been caught by `reviewer` that the building sess
 - `hooks/hooks.json` with the five hooks in 4.4, each a small shell script under `hooks/scripts/`, each with its own test.
 - `researcher` and `simplifier` subagents.
 - Plan-drift check: `/gss:ship` fails if the diff touches files that `plan.md` does not mention, unless `plan.md` was updated in the branch.
-- Risk tiers in `config.yml`: `low` work items skip the plan gate, `high` ones require a named second approver in `accepted_by`.
+- Risk tiers in `config.json`: `low` work items skip the plan gate, `high` ones require a named second approver in `accepted_by`.
 
 Done when: every rule written in a skill in Iterations 0 and 1 has a hook or check behind it, or a recorded decision that it stays advisory.
 
@@ -224,7 +224,7 @@ gss/
     init/SKILL.md          (iteration 3)            -> /gss:init
     factory-conventions/   knowledge skill, not user-invocable
       SKILL.md
-      templates/intent.md, spec.md, plan.md, review.md, config.yml
+      templates/intent.md, spec.md, plan.md, review.md, config.json
   agents/                  (iteration 1+)
     researcher.md  verifier.md  reviewer.md  simplifier.md
   hooks/                   (iteration 2)
