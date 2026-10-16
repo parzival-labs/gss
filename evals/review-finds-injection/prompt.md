@@ -7,4 +7,4 @@ timeout_seconds: 600
 allowed_tools: [Read, Glob, Grep, Skill, Agent]
 ---
 
-/gss:review add-search
+The add-search work item has been built. Review it before it ships.

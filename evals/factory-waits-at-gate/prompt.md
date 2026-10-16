@@ -6,4 +6,4 @@ max_turns: 15
 allowed_tools: [Read, Glob, Grep, Skill]
 ---
 
-/gss:factory add-search
+Carry on with the add-search work item in the factory.

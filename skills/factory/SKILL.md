@@ -11,7 +11,7 @@ You are the orchestrator. Read the `factory-conventions` skill first. Then:
 ## 1. Resolve the work item
 
 - If `$ARGUMENTS` matches an existing directory `factory/<slug>/`, that is the work item.
-- Otherwise `$ARGUMENTS` is a new idea. Derive a slug per the conventions and confirm it with the user in one line before creating anything.
+- Otherwise `$ARGUMENTS` is a new idea. Derive a slug per the conventions and go straight to the intent stage's questions in the same reply. State the proposed slug in one line at the top so the user can correct it when they answer. Do not spend a round trip on the slug alone. Create nothing until the user has answered.
 - If `$ARGUMENTS` is empty, run `/gss:status` behaviour and ask which work item to continue.
 
 ## 2. Work out the current stage
@@ -39,7 +39,7 @@ Read the frontmatter of each artifact that exists and `log.md`. Apply the first 
 
 ## 3. Run exactly one stage
 
-Follow the matching stage skill: `intent`, `spec`, `plan`, `build`, `review` or `ship`. Do not run two stages in one invocation, even if the user accepted in chat. One stage, one gate, one stop. The user runs `/gss:factory <slug>` again to continue.
+Load the matching stage skill with the Skill tool, by its namespaced name: `gss:intent`, `gss:spec`, `gss:plan`, `gss:build`, `gss:review` or `gss:ship`. Then follow it exactly. Never run a stage from this table alone or from memory: the stage skill holds its limits, such as how many questions to ask. Do not run two stages in one invocation, even if the user accepted in chat. One stage, one gate, one stop. The user runs `/gss:factory <slug>` again to continue.
 
 ## 4. Before stopping
 
