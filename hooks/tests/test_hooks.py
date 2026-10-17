@@ -164,5 +164,100 @@ class GuardReviewerBashTest(unittest.TestCase):
         self.assertEqual(self.bash("rm -rf build", agent_type="gss:verifier"), 0)
         self.assertEqual(self.bash("make test", agent_type=None), 0)
 
+
+class DoneMeansCheckedTest(unittest.TestCase):
+    def setUp(self):
+        self.repo = Repo()
+
+    def tearDown(self):
+        self.repo.cleanup()
+
+    def stop(self, active=False):
+        code, out, _ = run_hook("done_means_checked.py", {
+            "hook_event_name": "Stop", "cwd": self.repo.root, "stop_hook_active": active,
+        })
+        self.assertEqual(code, 0)
+        return json.loads(out) if out.strip() else None
+
+    def log(self, line):
+        path = os.path.join(self.repo.root, "factory/add-thing/log.md")
+        with open(path, "a", encoding="utf-8") as fh:
+            fh.write(line + "\n")
+
+    def test_allows_off_factory_branches(self):
+        write(self.repo.root, "src/app.py", "x = 2\n")
+        self.assertIsNone(self.stop())
+
+    def test_allows_before_plan_accepted(self):
+        self.repo.work_item(plan_status="draft")
+        self.assertIsNone(self.stop())
+
+    def test_allows_accepted_plan_with_no_code_yet(self):
+        self.repo.work_item(plan_status="accepted")
+        self.assertIsNone(self.stop())
+
+    def test_blocks_uncommitted_code(self):
+        self.repo.work_item(plan_status="accepted")
+        write(self.repo.root, "src/app.py", "x = 2\n")
+        self.assertEqual(self.stop()["decision"], "block")
+
+    def test_blocks_code_committed_without_passing_build(self):
+        self.repo.work_item(plan_status="accepted")
+        write(self.repo.root, "src/app.py", "x = 2\n")
+        self.repo.commit("1. change app")
+        self.assertEqual(self.stop()["decision"], "block")
+
+    def test_allows_after_passing_build_line(self):
+        self.repo.work_item(plan_status="accepted")
+        write(self.repo.root, "src/app.py", "x = 2\n")
+        self.repo.commit("1. change app")
+        self.log("2026-10-17 build: checks passed (1 passed) at abc123")
+        self.repo.commit("Log build")
+        self.assertIsNone(self.stop())
+
+    def test_blocks_fix_after_build(self):
+        self.repo.work_item(plan_status="accepted")
+        write(self.repo.root, "src/app.py", "x = 2\n")
+        self.repo.commit("1. change app")
+        self.log("2026-10-17 build: checks passed at abc123")
+        self.repo.commit("Log build")
+        write(self.repo.root, "src/app.py", "x = 3\n")
+        self.repo.commit("Fix review finding")
+        self.assertEqual(self.stop()["decision"], "block")
+
+    def test_allows_second_stop_attempt(self):
+        self.repo.work_item(plan_status="accepted")
+        write(self.repo.root, "src/app.py", "x = 2\n")
+        self.assertIsNone(self.stop(active=True))
+
+
+class FormatOnEditTest(unittest.TestCase):
+    def setUp(self):
+        self.repo = Repo()
+
+    def tearDown(self):
+        self.repo.cleanup()
+
+    def edit(self, rel):
+        return run_hook("format_on_edit.py", {
+            "hook_event_name": "PostToolUse", "cwd": self.repo.root, "tool_name": "Edit",
+            "tool_input": {"file_path": os.path.join(self.repo.root, rel)},
+        })
+
+    def test_noop_without_config(self):
+        self.assertEqual(self.edit("src/app.py")[0], 0)
+
+    def test_runs_configured_formatter_on_the_file(self):
+        write(self.repo.root, "factory/config.json", json.dumps({"format": "echo formatted >> {file}"}))
+        self.assertEqual(self.edit("src/app.py")[0], 0)
+        with open(os.path.join(self.repo.root, "src/app.py"), encoding="utf-8") as fh:
+            self.assertIn("formatted", fh.read())
+
+    def test_reports_formatter_failure(self):
+        write(self.repo.root, "factory/config.json", json.dumps({"format": "false {file}"}))
+        code, _, err = self.edit("src/app.py")
+        self.assertEqual(code, 2)
+        self.assertIn("Formatter failed", err)
+
 if __name__ == "__main__":
     unittest.main()
