@@ -70,6 +70,7 @@ What is enforced and what is not:
 | No code edits on `factory/<slug>` before plan.md is accepted | Enforced by the `guard_edits` hook |
 | No edits to existing tests that plan.md does not name | Enforced by the `guard_edits` hook |
 | No edits to `protected_paths` from `factory/config.json`, and no edits to the config inside a work item | Enforced by the `guard_edits` hook |
+| No ending a build with code newer than the last passing `build:` line | Enforced by the `done_means_checked` Stop hook, which nudges once |
 | The reviewer runs only read-only git commands | Enforced by the `guard_reviewer_bash` hook |
 | Only a human accepts intent, spec or plan | Advisory. The hooks stop code changing before acceptance, but cannot tell who edited the frontmatter. Git history shows it |
 | One stage per `/gss:factory` run | Advisory |
@@ -80,11 +81,12 @@ What is enforced and what is not:
 {
   "checks": ["make test"],
   "protected_paths": ["migrations/*", "infra/**"],
-  "test_globs": ["e2e/**"]
+  "test_globs": ["e2e/**"],
+  "format": "ruff format {file}"
 }
 ```
 
-Only `checks` is required for build. `protected_paths` and `test_globs` are fnmatch globs relative to the repo root.
+Only `checks` is required for build. `protected_paths` and `test_globs` are fnmatch globs relative to the repo root. `format` runs after every edit when set; `{file}` is replaced with the edited path.
 
 ## log.md
 

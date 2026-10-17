@@ -28,4 +28,4 @@ Read the `factory-conventions` skill. Input is an accepted `factory/<slug>/plan.
    or `build: checks failed` with the failing output, and stop without shipping.
 6. Commit the log line. Stop with: "Build complete on `factory/<slug>`. Run `/gss:factory <slug>` to review."
 
-Done means the verifier ran the checks in this session and they passed, and the verdict is in the log. Not "should pass".
+Done means the verifier ran the checks in this session and they passed, and the verdict is in the log. Not "should pass". Enforced: the `done_means_checked` Stop hook will not let the session end quietly while code is newer than the last passing `build:` line.
