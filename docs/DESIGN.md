@@ -117,24 +117,27 @@ Defined in `agents/*.md`, each with a narrow tool list and a fresh context windo
 
 ### 4.4 Hooks
 
-Hooks are the deterministic layer. They arrive in Iteration 2, once the skills have shown which rules matter. Planned set:
+Hooks are the deterministic layer, built in Iteration 2. All are stdlib Python under `hooks/scripts/`, tested in `hooks/tests/`, and fail open: if a hook cannot read the repository state, it allows the action rather than block work on a hook bug.
 
 | Hook | Event | Rule |
 |---|---|---|
-| `guard-plan-stage` | PreToolUse on Write/Edit | While a work item is in `stage: plan`, block edits outside `factory/<slug>/`. Backstop for "plan mode as default" |
-| `guard-tests-during-fix` | PreToolUse on Write/Edit | During a fix task, block edits to test files. Backstop for "write the failing test first, then fix without touching it" |
-| `guard-protected-paths` | PreToolUse on Write/Edit | Block edits to paths listed in `factory/config.json` (generated code, migrations, infra) with a message naming the approval route |
-| `format-on-edit` | PostToolUse on Write/Edit | Run the project formatter on the changed file only |
-| `done-means-checked` | Stop | Refuse to end a build stage until the check command has run in this session and passed |
+| `guard_edits` | PreToolUse on Write, Edit, MultiEdit, NotebookEdit | On branch `factory/<slug>`: no edits outside `factory/<slug>/` until plan.md is accepted; no edits to tests that exist on the default branch unless plan.md names them; no edits to `factory/config.json`. On any branch: no edits to `protected_paths` from the config |
+| `guard_reviewer_bash` | PreToolUse on Bash | Inside the reviewer subagent only, allow single read-only git commands and nothing else |
+| `done_means_checked` | Stop | On a work item with an accepted plan, block once if code is uncommitted or newer than the last `build: checks passed` line. A second stop is always allowed, so a genuine pause to ask the user is never trapped |
+| `format_on_edit` | PostToolUse on Write, Edit, MultiEdit | Opt-in: run the `format` command from the config on the edited file |
 
 Each block message explains the reason and the route to approval, as the playbook requires.
+
+Two changes from the original plan. The "plan stage" guard keys on the work item branch and plan.md's status rather than a stage marker, so it needs no extra state. The "tests during a fix" guard became "existing tests during build", because a review fix sometimes legitimately adds tests: new test files are always allowed, and changing an existing one means naming it in plan.md, where the reviewer sees it.
+
+`bin/gss-plan-drift` is a command rather than a hook. The ship stage runs it, and it fails when the branch changes a file that plan.md does not name.
 
 ### 4.5 Knowledge skills
 
 Non-invocable skills (`user-invocable: false`) that carry the factory's institutional knowledge so the stage skills stay short:
 
 - `factory-conventions`: artifact templates, frontmatter schema, directory layout, gate rules.
-- `factory-review-passes`: default review passes and the Important / Nit definitions, used when a project has no `REVIEW.md`.
+- The review passes and Important / Nit definitions live in the `reviewer` agent itself, so there is one place to edit them.
 
 Project-specific policy skills (security standard, API conventions, brand rules) are not part of the plugin. The spec and review stages load whatever skills the host project provides.
 
@@ -182,10 +185,10 @@ Done when: a review finding has been caught by `reviewer` that the building sess
 
 ### Iteration 2: deterministic guardrails
 
-- `hooks/hooks.json` with the five hooks in 4.4, each a small shell script under `hooks/scripts/`, each with its own test.
-- `researcher` and `simplifier` subagents.
-- Plan-drift check: `/gss:ship` fails if the diff touches files that `plan.md` does not mention, unless `plan.md` was updated in the branch.
-- Risk tiers in `config.json`: `low` work items skip the plan gate, `high` ones require a named second approver in `accepted_by`.
+- `hooks/hooks.json` with the hooks in 4.4, each a small Python script under `hooks/scripts/`, each with its own test. Built.
+- `researcher` and `simplifier` subagents. Built.
+- Plan-drift check: `/gss:ship` fails if the diff touches files that `plan.md` does not mention, unless `plan.md` was updated in the branch. Built as `bin/gss-plan-drift`.
+- Risk tiers in `config.json`: `low` work items skip the plan gate, `high` ones require a named second approver in `accepted_by`. Deferred: this is an open question in the factory's own intent, and it needs a decision on who sets the tier.
 
 Done when: every rule written in a skill in Iterations 0 and 1 has a hook or check behind it, or a recorded decision that it stays advisory.
 
@@ -255,7 +258,7 @@ Install in another project:
 These shape the design and are worth knowing before building. Verified on 2026-10-16 against code.claude.com/docs with Claude Code 2.1.301 installed here.
 
 - Slash commands are skills. `skills/<name>/SKILL.md` in plugin `gss` becomes `/gss:<name>`. The older `commands/*.md` form still works but the docs say to prefer skills.
-- A plugin cannot set the permission mode, and `permissionMode` in a plugin-shipped agent is ignored. So the plan stage cannot force plan mode. The skill asks Claude to call `EnterPlanMode`, and the `guard-plan-stage` hook is the enforcement. This is exactly the playbook's "skills advise, hooks enforce".
+- A plugin cannot set the permission mode, and `permissionMode` in a plugin-shipped agent is ignored. So the plan stage cannot force plan mode. The skill asks Claude to call `EnterPlanMode`, and the `guard_edits` hook is the enforcement. This is exactly the playbook's "skills advise, hooks enforce".
 - A `CLAUDE.md` inside a plugin is not loaded. Factory conventions therefore live in a knowledge skill, which is also what the playbook recommends for institutional knowledge.
 - Plugin hooks live in `hooks/hooks.json`. Exit code 2 blocks and feeds stderr to Claude. Use the `args` exec form with `${CLAUDE_PLUGIN_ROOT}` for script paths.
 - `claude plugin validate <path>` checks structure. `claude plugin eval` runs `evals/<case>/prompt.md` with graders and supports `--trust-plugin` and `--json` for CI. Every eval run is a real model call, so the suite stays small.
@@ -271,6 +274,8 @@ These shape the design and are worth knowing before building. Verified on 2026-1
 3. **Gate mechanism in Iteration 0.** Edit `status: accepted` and commit, rather than a PR per artifact. PR-per-artifact arrives with automation in Iteration 3.
 4. **Dogfood first.** The first real work item is the factory itself, and Iteration 0 is built by following the templates by hand.
 
-## 10. Proposed next step
+## 10. Status and next step
 
-Build Iteration 0 on a branch: plugin scaffold, the eight skills, templates, `CLAUDE.md`, and the factory's own `intent.md`. Validate with `claude plugin validate .`, install it into a scratch project, and run one toy change through to a draft PR. Record what the skills had to say twice, because that list is the input to Iteration 2's hooks.
+Iterations 0, 1 and 2 are built and on `main`. The `factory-conventions` skill holds the current table of which rules are enforced and which stay advisory.
+
+Next: run one real change through `/gss:factory` end to end and record what the skills had to say twice. Then Iteration 3: run stages headlessly in GitHub Actions and sweep factory PRs to green. Iteration 3 needs the `CLAUDE_CODE_OAUTH_TOKEN` repository secret.
