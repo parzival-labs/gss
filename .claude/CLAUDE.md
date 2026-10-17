@@ -10,7 +10,7 @@ This file lives in `.claude/` on purpose. The repo root is the plugin root, and 
 - `docs/DESIGN.md`: the design proposal. Read it before changing anything else.
 - `.github/workflows/`: Claude code review and `@claude` mention workflows.
 - `REVIEW.md`: review-only rules for the managed Code Review service.
-- Plugin: `.claude-plugin/`, `skills/`, `agents/`, `evals/`. Hooks arrive in Iteration 2.
+- Plugin: `.claude-plugin/`, `skills/`, `agents/`, `hooks/`, `evals/`.
 
 ## Conventions
 
@@ -25,6 +25,7 @@ Before a PR, confirm:
 
 - `claude plugin validate --strict` passes on `.`, `.claude-plugin/plugin.json`, `skills` and `agents`.
 - `claude plugin eval . --scaffold --trust-plugin --runs 1 --ablation none` passes when skills, agents or evals change.
+- `python3 -m unittest discover -s hooks/tests` passes.
 - Workflow YAML parses.
 
 ## Code review

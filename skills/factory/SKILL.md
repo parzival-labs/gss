@@ -47,4 +47,4 @@ Load the matching stage skill with the Skill tool, by its namespaced name: `gss:
 - Commit on branch `factory/<slug>`.
 - Print the gate message.
 
-Everything above is advisory in Iteration 0. Nothing enforces the one-stage rule or the gate yet.
+The one-stage rule is advisory. The gates are partly enforced: hooks stop any code changing before the plan is accepted. See the enforcement table in `factory-conventions`.
