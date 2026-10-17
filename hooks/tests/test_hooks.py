@@ -10,6 +10,7 @@ import unittest
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 SCRIPTS = os.path.join(HERE, "..", "scripts")
+PLAN_DRIFT = os.path.join(HERE, "..", "..", "bin", "gss-plan-drift")
 
 
 def git(cwd, *args):
@@ -258,6 +259,38 @@ class FormatOnEditTest(unittest.TestCase):
         code, _, err = self.edit("src/app.py")
         self.assertEqual(code, 2)
         self.assertIn("Formatter failed", err)
+
+
+class PlanDriftTest(unittest.TestCase):
+    def setUp(self):
+        self.repo = Repo()
+
+    def tearDown(self):
+        self.repo.cleanup()
+
+    def drift(self, *args):
+        result = subprocess.run([sys.executable, PLAN_DRIFT, *args], cwd=self.repo.root,
+                                capture_output=True, text=True, timeout=30)
+        return result.returncode, result.stdout + result.stderr
+
+    def test_clean_when_changes_are_planned(self):
+        self.repo.work_item(plan_status="accepted")
+        write(self.repo.root, "src/app.py", "x = 2\n")
+        self.repo.commit("1. change app")
+        code, out = self.drift()
+        self.assertEqual(code, 0, out)
+
+    def test_reports_unplanned_files(self):
+        self.repo.work_item(plan_status="accepted")
+        write(self.repo.root, "src/other.py", "y = 1\n")
+        self.repo.commit("sneaky")
+        code, out = self.drift()
+        self.assertEqual(code, 1)
+        self.assertIn("src/other.py", out)
+
+    def test_needs_a_work_item(self):
+        self.assertEqual(self.drift()[0], 2)
+
 
 if __name__ == "__main__":
     unittest.main()

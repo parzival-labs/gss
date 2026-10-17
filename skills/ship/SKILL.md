@@ -11,16 +11,17 @@ Read the `factory-conventions` skill. Input is a `review: 0 important` line in `
 ## Steps
 
 1. Refuse to start if the newest `review:` line is missing, is older than the newest `build:` line, or reports Important findings.
-2. Push `factory/<slug>` to the remote with upstream tracking.
-3. Open a draft pull request against the default branch, using whatever GitHub tooling the session has: the `gh` CLI or a GitHub tool. If neither is available, print the title and body and ask the user to open it.
-4. Title: the intent's title. Body, in this order:
+2. Run `gss-plan-drift <slug>`. It is on the PATH while this plugin is enabled. If it lists files that plan.md does not name, stop: update plan.md's Files section with a reason in a commit, or revert those files, then run review again. Do not ship with drift.
+3. Push `factory/<slug>` to the remote with upstream tracking.
+4. Open a draft pull request against the default branch, using whatever GitHub tooling the session has: the `gh` CLI or a GitHub tool. If neither is available, print the title and body and ask the user to open it.
+5. Title: the intent's title. Body, in this order:
    - One paragraph: the problem and the outcome, from `intent.md`.
    - Links to `intent.md`, `spec.md` and `plan.md` on the branch.
    - The acceptance criteria from `spec.md` as a checklist.
    - The final check output from `log.md`, in a code block.
    - The review summary and every Nit from `review.md`, as a list.
    - Any Open questions still carried.
-5. Append `<date> ship: draft PR #<n>` to `log.md`, commit, push.
-6. Stop with the PR link and: "The merge is the final gate. Review intent and risk, not every line."
+6. Append `<date> ship: draft PR #<n>` to `log.md`, commit, push.
+7. Stop with the PR link and: "The merge is the final gate. Review intent and risk, not every line."
 
 The session that built the code does not approve it. The reviewer subagent has already reviewed it in a fresh context; the PR is where a human decides.
