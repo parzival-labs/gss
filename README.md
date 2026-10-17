@@ -30,10 +30,10 @@ Put the commands that must pass in `factory/config.json`, for example `{"checks"
 
 ## Status
 
-Iteration 1: feedback loop and separation of duties.
+Iterations 1 and 2: feedback loop, separation of duties, and enforcement.
 
 - A `verifier` subagent runs the checks in a fresh context before build is declared done.
 - A `reviewer` subagent, which never sees the building session's reasoning, reviews every work item before it ships. Important findings send the work item back to build.
 - An eval suite under `evals/` gates plugin changes in CI. See `evals/README.md`.
 
-Hooks that enforce the rules the skills state arrive in Iteration 2. See `docs/DESIGN.md` for the iteration plan.
+Iteration 2 adds hooks that enforce what the skills state: no code before an accepted plan, no quiet edits to existing tests, protected paths, a read-only reviewer, and no ending a build on unverified code. The `factory-conventions` skill lists what is enforced and what is still advisory. See `docs/DESIGN.md` for the iteration plan.
