@@ -19,7 +19,7 @@ Read the `factory-conventions` skill. Input is an accepted `factory/<slug>/plan.
    - If green, commit with the step number and title as the message.
    - If red, fix within the step. Do not edit a test to make it pass unless the plan's Tests section says that test changes in this step. Enforced: the `guard_edits` hook blocks edits to tests that exist on the default branch unless plan.md names them. If a test genuinely must change, add it to plan.md's Tests section in the same commit and say why.
 4. If reality diverges from the plan, edit `plan.md` in the same commit as the code change and say why in the commit body. The plan stays `accepted`; the divergence is visible in the diff.
-5. When all steps are done, delegate the final check to the `verifier` subagent from this plugin, giving it only the slug. It runs the checks in a fresh context and returns literal output. Do not run the final check yourself and report it as the verifier's; if the verifier cannot be spawned, run the checks yourself and say so in the log line. Append to `log.md`:
+5. When all steps are done and checks are green, run the `simplifier` subagent once on the slug. If it changed anything, run the checks, and commit its edits as their own step titled `Simplify`; if checks fail, revert its edits rather than fix them. Then delegate the final check to the `verifier` subagent from this plugin, giving it only the slug. It runs the checks in a fresh context and returns literal output. Do not run the final check yourself and report it as the verifier's; if the verifier cannot be spawned, run the checks yourself and say so in the log line. Append to `log.md`:
 
    ```
    <date> build: checks passed (<summary of output>) at <short sha>
