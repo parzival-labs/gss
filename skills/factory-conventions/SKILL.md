@@ -72,6 +72,7 @@ What is enforced and what is not:
 | No edits to `protected_paths` from `factory/config.json`, and no edits to the config inside a work item | Enforced by the `guard_edits` hook |
 | No ending a build with code newer than the last passing `build:` line | Enforced by the `done_means_checked` Stop hook, which nudges once |
 | The reviewer runs only read-only git commands | Enforced by the `guard_reviewer_bash` hook |
+| Every changed file is named in plan.md before ship | Checked by `gss-plan-drift` in the ship stage |
 | Only a human accepts intent, spec or plan | Advisory. The hooks stop code changing before acceptance, but cannot tell who edited the frontmatter. Git history shows it |
 | One stage per `/gss:factory` run | Advisory |
 

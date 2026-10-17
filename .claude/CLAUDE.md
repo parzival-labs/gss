@@ -10,7 +10,7 @@ This file lives in `.claude/` on purpose. The repo root is the plugin root, and 
 - `docs/DESIGN.md`: the design proposal. Read it before changing anything else.
 - `.github/workflows/`: Claude code review and `@claude` mention workflows.
 - `REVIEW.md`: review-only rules for the managed Code Review service.
-- Plugin: `.claude-plugin/`, `skills/`, `agents/`, `hooks/`, `evals/`.
+- Plugin: `.claude-plugin/`, `skills/`, `agents/`, `hooks/`, `bin/`, `evals/`.
 
 ## Conventions
 
