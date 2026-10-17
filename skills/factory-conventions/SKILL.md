@@ -70,6 +70,7 @@ What is enforced and what is not:
 | No code edits on `factory/<slug>` before plan.md is accepted | Enforced by the `guard_edits` hook |
 | No edits to existing tests that plan.md does not name | Enforced by the `guard_edits` hook |
 | No edits to `protected_paths` from `factory/config.json`, and no edits to the config inside a work item | Enforced by the `guard_edits` hook |
+| The reviewer runs only read-only git commands | Enforced by the `guard_reviewer_bash` hook |
 | Only a human accepts intent, spec or plan | Advisory. The hooks stop code changing before acceptance, but cannot tell who edited the frontmatter. Git history shows it |
 | One stage per `/gss:factory` run | Advisory |
 
