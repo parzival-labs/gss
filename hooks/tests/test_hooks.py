@@ -138,5 +138,31 @@ class GuardEditsTest(unittest.TestCase):
                                 input="not json", capture_output=True, text=True)
         self.assertEqual(result.returncode, 0)
 
+
+class GuardReviewerBashTest(unittest.TestCase):
+    def bash(self, command, agent_type="gss:reviewer"):
+        return run_hook("guard_reviewer_bash.py", {
+            "hook_event_name": "PreToolUse", "tool_name": "Bash", "agent_type": agent_type,
+            "tool_input": {"command": command},
+        })[0]
+
+    def test_allows_read_only_git(self):
+        for command in ["git diff main...HEAD", "git log --oneline -5", "git show HEAD:src/app.py",
+                        "git -C /r status", "git branch", "git branch -a", "git branch --show-current"]:
+            self.assertEqual(self.bash(command), 0, command)
+
+    def test_accepts_unnamespaced_agent_type(self):
+        self.assertEqual(self.bash("rm -rf src", agent_type="reviewer"), 2)
+
+    def test_blocks_writes_and_chaining(self):
+        for command in ["rm -rf src", "git checkout -- src", "git diff > out.txt", "git log; rm x", "git diff $(echo)",
+                        "git diff --output=patch.txt", "git show --output patch.txt HEAD", "git diff --ext-diff",
+                        "git branch evil", "git branch -D main", "git branch -m old new"]:
+            self.assertEqual(self.bash(command), 2, command)
+
+    def test_ignores_other_agents_and_main_session(self):
+        self.assertEqual(self.bash("rm -rf build", agent_type="gss:verifier"), 0)
+        self.assertEqual(self.bash("make test", agent_type=None), 0)
+
 if __name__ == "__main__":
     unittest.main()
