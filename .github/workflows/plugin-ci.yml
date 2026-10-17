@@ -95,6 +95,22 @@ jobs:
           --max-cost-usd 8
           --no-publish
           --json evals/results/ci.json
+      - name: Show eval run errors
+        if: failure() && env.HAS_CLAUDE_TOKEN == 'true'
+        run: |
+          python3 - <<'PY'
+          import json, pathlib
+          path = pathlib.Path("evals/results/ci.json")
+          if not path.exists():
+              print("No evals/results/ci.json was written.")
+              raise SystemExit(0)
+          data = json.loads(path.read_text())
+          for case in data.get("cases", []):
+              for arm, runs in (case.get("arms") or {}).items():
+                  for run in runs:
+                      if run.get("error"):
+                          print(f"::error title=Eval run error::{case['name']} ({arm}): {run['error']}")
+          PY
       - name: Upload eval results
         if: always() && env.HAS_CLAUDE_TOKEN == 'true'
         uses: actions/upload-artifact@v4
