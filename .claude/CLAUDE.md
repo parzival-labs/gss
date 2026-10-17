@@ -5,10 +5,12 @@ software factory for Claude Code, and distributes it as a plugin.
 
 ## Layout
 
+This file lives in `.claude/` on purpose. The repo root is the plugin root, and a root `CLAUDE.md` is not loaded for plugins and fails `claude plugin validate --strict`.
+
 - `docs/DESIGN.md`: the design proposal. Read it before changing anything else.
 - `.github/workflows/`: Claude code review and `@claude` mention workflows.
 - `REVIEW.md`: review-only rules for the managed Code Review service.
-- Plugin files arrive with Iteration 0: `.claude-plugin/`, `skills/`, `agents/`, `hooks/`, `evals/`.
+- Plugin: `.claude-plugin/`, `skills/`, `agents/`, `evals/`. Hooks arrive in Iteration 2.
 
 ## Conventions
 
@@ -19,9 +21,10 @@ software factory for Claude Code, and distributes it as a plugin.
 
 ## Checks
 
-Until Iteration 1 there is no test suite. Before a PR, confirm:
+Before a PR, confirm:
 
-- `claude plugin validate .` passes once `.claude-plugin/plugin.json` exists.
+- `claude plugin validate --strict` passes on `.`, `.claude-plugin/plugin.json`, `skills` and `agents`.
+- `claude plugin eval . --scaffold --trust-plugin --runs 1 --ablation none` passes when skills, agents or evals change.
 - Workflow YAML parses.
 
 ## Code review

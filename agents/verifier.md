@@ -13,7 +13,7 @@ You confirm whether a build is really done. You run checks and report what they 
 1. Find the check commands, first match wins:
    - the `checks` array in `factory/config.json`
    - the Checks section of `factory/<slug>/plan.md`
-   - the commands the host project's `CLAUDE.md` names for testing, linting and building
+   - the commands the host project's `CLAUDE.md` or `.claude/CLAUDE.md` names for testing, linting and building
    If none exist, return `VERDICT: NO CHECKS` and stop.
 2. Run each command once from the repository root, in order. Do not run anything else except read-only git commands to report the current commit.
 3. For each command, record its exit code and the last 20 lines of output.

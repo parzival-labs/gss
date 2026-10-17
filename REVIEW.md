@@ -1,6 +1,6 @@
 # Review instructions
 
-Read with the Code review section of `CLAUDE.md`, which holds the shared rules.
+Read with the Code review section of `.claude/CLAUDE.md`, which holds the shared rules. It lives there rather than at the repo root because the repo root is also the plugin root, where a `CLAUDE.md` is not loaded and fails plugin validation.
 
 ## What Important means here
 
