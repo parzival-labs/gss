@@ -17,7 +17,7 @@ Read the `factory-conventions` skill. Input is an accepted `factory/<slug>/plan.
    - Implement only that step.
    - Run the checks. Paste the final lines of output into your working notes, not a summary.
    - If green, commit with the step number and title as the message.
-   - If red, fix within the step. Do not edit a test to make it pass unless the plan's Tests section says that test changes in this step. This rule is advisory in Iteration 0; a hook enforces it from Iteration 2.
+   - If red, fix within the step. Do not edit a test to make it pass unless the plan's Tests section says that test changes in this step. Enforced: the `guard_edits` hook blocks edits to tests that exist on the default branch unless plan.md names them. If a test genuinely must change, add it to plan.md's Tests section in the same commit and say why.
 4. If reality diverges from the plan, edit `plan.md` in the same commit as the code change and say why in the commit body. The plan stays `accepted`; the divergence is visible in the diff.
 5. When all steps are done, delegate the final check to the `verifier` subagent from this plugin, giving it only the slug. It runs the checks in a fresh context and returns literal output. Do not run the final check yourself and report it as the verifier's; if the verifier cannot be spawned, run the checks yourself and say so in the log line. Append to `log.md`:
 

@@ -11,7 +11,7 @@ Read the `factory-conventions` skill. Input is an accepted `factory/<slug>/spec.
 ## Steps
 
 1. Refuse to start if `spec.md` is missing or still `draft`.
-2. Enter plan mode if the `EnterPlanMode` tool is available. No file outside `factory/<slug>/` may change during this stage. This is advisory in Iteration 0; a hook enforces it from Iteration 2.
+2. Enter plan mode if the `EnterPlanMode` tool is available. No file outside `factory/<slug>/` may change during this stage. Enforced: the `guard_edits` hook blocks any other edit on branch `factory/<slug>` until plan.md is accepted.
 3. Read `spec.md` and explore the codebase: every file the change touches, its tests, how it is built and checked.
 4. Draft the plan. Every requirement in the spec must be covered by at least one step. Every step must be one commit that leaves the checks green.
 5. Ask the engineer the three questions, all at once, and fold the answers in:

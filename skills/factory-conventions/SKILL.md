@@ -63,7 +63,27 @@ A stage ends by writing its artifact with `status: draft` and stopping with this
 
 If the user accepts in the conversation instead, in plain words such as "accept" or "looks good, go on", you may set `status: accepted`, fill `accepted_by` from `git config user.name` and `accepted_at` with today's date, and commit with the message `Accept <stage> for <slug>` quoting the user's words in the body. Never accept an artifact on your own judgement.
 
-The gate is advisory in Iteration 0. A hook enforces it from Iteration 2.
+What is enforced and what is not:
+
+| Rule | Status |
+|---|---|
+| No code edits on `factory/<slug>` before plan.md is accepted | Enforced by the `guard_edits` hook |
+| No edits to existing tests that plan.md does not name | Enforced by the `guard_edits` hook |
+| No edits to `protected_paths` from `factory/config.json`, and no edits to the config inside a work item | Enforced by the `guard_edits` hook |
+| Only a human accepts intent, spec or plan | Advisory. The hooks stop code changing before acceptance, but cannot tell who edited the frontmatter. Git history shows it |
+| One stage per `/gss:factory` run | Advisory |
+
+## config.json
+
+```json
+{
+  "checks": ["make test"],
+  "protected_paths": ["migrations/*", "infra/**"],
+  "test_globs": ["e2e/**"]
+}
+```
+
+Only `checks` is required for build. `protected_paths` and `test_globs` are fnmatch globs relative to the repo root.
 
 ## log.md
 
