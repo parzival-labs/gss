@@ -56,6 +56,11 @@ jobs:
         run: claude plugin validate --strict agents
       - name: Check eval fixture scripts parse
         run: for f in evals/*/fixture.sh; do bash -n "$f"; done
+      - name: Hook unit tests
+        run: |
+          git config --global user.name "Plugin CI"
+          git config --global user.email "ci@example.invalid"
+          python3 -m unittest discover -s hooks/tests -v
 
   eval:
     needs: validate
