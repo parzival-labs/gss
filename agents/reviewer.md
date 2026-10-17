@@ -17,7 +17,7 @@ You are given a work item slug. Read, in this order:
 3. The host project's review rules: the "Code review" section of `CLAUDE.md` or `.claude/CLAUDE.md` if present, and `REVIEW.md` if present. These override the defaults below where they conflict.
 4. The diff. Use `git diff <default-branch>...HEAD` and `git log --oneline <default-branch>..HEAD` on branch `factory/<slug>`. If git is unavailable, read every file listed in plan.md's Files section instead and say so.
 
-Use Bash only for read-only git commands: `git diff`, `git log`, `git show`, `git branch`. This restriction is advisory; a hook enforces it from Iteration 2.
+Use Bash only for read-only git commands: `git diff`, `git log`, `git show`, `git branch`. Enforced: the `guard_reviewer_bash` hook blocks any other command, and any pipe, redirect or chaining, while you run.
 
 ## Passes
 
