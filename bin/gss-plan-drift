@@ -1,0 +1,48 @@
+#!/usr/bin/env python3
+"""List files changed on a work item branch that its plan.md never mentions.
+
+Usage: gss-plan-drift [slug]
+The slug defaults to the checked-out factory/<slug> branch. Exit 0 when every
+changed file outside factory/ is named in plan.md, 1 when some are not, and
+2 when the work item cannot be found.
+"""
+
+import os
+import sys
+
+HERE = os.path.dirname(os.path.realpath(__file__))
+sys.path.insert(0, os.path.join(HERE, "..", "hooks", "scripts"))
+import factory_state as fs  # noqa: E402
+
+
+def main(argv):
+    root = fs.repo_root(os.getcwd())
+    if not root:
+        print("gss-plan-drift: not inside a git repository", file=sys.stderr)
+        return 2
+    slug = argv[1] if len(argv) > 1 else fs.work_item_slug(root)
+    plan = fs.read_text(fs.artifact_path(root, slug, "plan.md")) if slug else None
+    if not plan:
+        print("gss-plan-drift: no work item plan.md found; pass the slug", file=sys.stderr)
+        return 2
+    base = fs.branch_base(root)
+    if not base:
+        print("gss-plan-drift: cannot find the default branch to compare against", file=sys.stderr)
+        return 2
+    changed = fs.git(root, "diff", "--name-only", f"{base}...HEAD") or ""
+    drift = [
+        path for path in changed.splitlines()
+        if path and not path.startswith(f"{fs.FACTORY_DIR}/") and not fs.mentioned_in(plan, path)
+    ]
+    if not drift:
+        print(f"No plan drift: every changed file is named in factory/{slug}/plan.md.")
+        return 0
+    print(f"Plan drift: these files changed but factory/{slug}/plan.md does not name them:")
+    for path in drift:
+        print(f"  {path}")
+    print("Add them to plan.md's Files section with a reason, in a commit on this branch, or revert them.")
+    return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv))
